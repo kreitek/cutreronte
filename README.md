@@ -16,5 +16,5 @@ Sustituto temporal de caronte server
 utilizar variables de entorno, ej:
 ``` python
 from os import getenv
-loquesea = getenv('CLAVE_QUE DEVERIA_EXISTIR', valor_por_defecto_si_no_existe)
+loquesea = getenv('CLAVE_QUE DEBERIA_EXISTIR', valor_por_defecto_si_no_existe)
 ```
