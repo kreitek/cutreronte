@@ -6,6 +6,7 @@
     <tr class="thead-dark">
         <td>ID</td>
         <td>USUARIO</td>
+        <td>RFID</td>
         <td>AUTORIZADO</td>
         <td>FECHA DE CREACION</td>
         <td>VISTO POR ULTIMA VEZ</td>
@@ -16,13 +17,11 @@
       <tr>
         <td>{{ elem.id }}</td>
         <td>{{ elem.username }}</td>
+        <td>{{ elem.rfid }}</td>
         <td>{{ elem.autorizado_texto }}</td>
         <td>{{ elem.t_creacion }}</td>
         <td>{{ elem.t_visto }}</td>
         <td><a href="modificarusuario/{{ elem.id }}" class="btn btn-primary">Editar</a></td>
-        {% if not elem.autorizado %}
-          <td><a href="autorizarusuario/{{ elem.id }}" class="btn btn-info">Autorizar</a></td>
-        {% endif %}
       </tr>
   {% endfor %}
   </table>

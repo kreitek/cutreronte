@@ -7,16 +7,39 @@ from wtforms import StringField, SubmitField, TextAreaField, BooleanField
 from wtforms.validators import DataRequired
 from datetime import datetime
 from cutreronte_seguimiento_usuarios import SeguimientoUsuarios
+from configparser import ConfigParser
+from cutreronte_telegram import CutreronteTelegram
+from cutreronte_domoticz import CutreronteDomoticz
+
+
+config = ConfigParser()
+config.read("config.ini")
+
+app_user = config.get('APP', 'user', fallback='admin')
+app_password = config.get('APP', 'password', fallback='admin')
+app_secretkey = config.get('APP', 'secretkey', fallback='5791628bb0b13ce0c676dfde280ba245')
+
+telegram_log_group = config.get('TELEGRAM', 'log_group', fallback='-111111')
+telegram_general_group = config.get('TELEGRAM', 'general_group', fallback='-111111')
+telegram_token = config.get('TELEGRAM', 'token', fallback='111111')
+
+domoticz_host = config.get('DOMOTICZ', 'host', fallback='192.168.1.10')
+domoticz_port = config.get('DOMOTICZ', 'port', fallback='8080')
+domoticz_idx = config.get('DOMOTICZ', 'idx', fallback='1')
 
 
 app = Flask(__name__, static_url_path="/static")
 api = Api(app)
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///cutreronte.db'
-app.config['SECRET_KEY'] = '5791628bb0b13ce0c676dfde280ba245' # os.environ.get('SECRET_KEY')
+app.config['SECRET_KEY'] = app_secretkey
 
 db = SQLAlchemy(app)
 auth = HTTPBasicAuth()
-su = SeguimientoUsuarios()
+
+tg = CutreronteTelegram(telegram_token)
+dz = CutreronteDomoticz(domoticz_host, domoticz_port, domoticz_idx)
+
+su = SeguimientoUsuarios(tg, dz, telegram_log_group, telegram_general_group)
 
 
 def actualiza_visto_por_ultima_vez(u):
@@ -27,10 +50,8 @@ def actualiza_visto_por_ultima_vez(u):
 
 @auth.verify_password
 def verify_password(username, password):
-    if username == 'test' and password == 'test':
-        return True
-    else:
-        return False
+    return True if username == app_user and password == app_password else False
+
 
 class Usuarios(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -43,9 +64,15 @@ class Usuarios(db.Model):
 
 @app.route('/')
 def home():
-    return "Api de cutreronte"
+    respuesta = "<H1>Cutreronte</H1>"
+    abiertocerradotexto = "ABIERTO" if su.abierto_cerrado else "CERRADO"
+    respuesta += "<P>Espacio {}</P>".format(abiertocerradotexto)
+    if su.abierto_cerrado:
+        respuesta += "<P>Numero de usuarios dento: {}</P>".format(len(su.usuarios_dentro))
+    return respuesta
 
 @app.route('/usuarios')
+@auth.login_required
 def ListarUsuarios():
     lista = Usuarios.query.order_by(Usuarios.t_visto.desc()).all()
     lista_formateada = []
@@ -53,6 +80,7 @@ def ListarUsuarios():
         el = {
             'id': elemento.id,
             'username': elemento.username if elemento.username else "NUEVO USUARIO!",
+            'rfid' : elemento.rfid,
             'autorizado': elemento.autorizado,
             'autorizado_texto': "Autorizado" if elemento.autorizado else "Sin autorizar",
             't_creacion': elemento.t_creacion.strftime("%d-%m-%Y"),
@@ -60,20 +88,6 @@ def ListarUsuarios():
         }
         lista_formateada.append(el)
     return render_template('lista.html', lista=lista_formateada)
-
-
-@app.route("/autorizarusuario/<int:id>", methods=['GET'])
-@auth.login_required
-def autorizarusuario(id):
-    u = Usuarios.query.filter_by(id=id).first()
-    if u:
-        setattr(u, 'autorizado', True)
-        db.session.commit()
-        #return "usuario {} autorizado".format(u.username)
-        return redirect(url_for('ListarUsuarios'))
-    else:
-        abort(404, message='usuario no encontrado')
-
 
 
 class FormUsuario(FlaskForm):
@@ -109,7 +123,7 @@ class api1(Resource):
             print('username', u.username)
             actualiza_visto_por_ultima_vez(u)
             if u.autorizado:
-                su.alguien_entro_o_salio(rfid)  # uso rfid porque el nombre a veces es None
+                su.alguien_entro_o_salio(u)  # uso rfid porque el nombre a veces es None
                 return {'status': 'ok', 'username': u.username}
             else:
                 abort(401, message='no autorizado')

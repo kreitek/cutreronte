@@ -5,9 +5,9 @@ from time import sleep
 
 class CutreronteDomoticz:
 
-    domoticz_ruta = "/json.htm?type=command&param=switchlight&idx={}&switchcmd={}"
+    domoticz_api = "/json.htm?type=command&param=switchlight&idx={}&switchcmd={}"
 
-    def __init__(self, host="192.168.1.10", port=8090, idx=1, user=None, pasw=None):
+    def __init__(self, host, port, idx):
         self.host = host
         self.port = port
         self.idx = idx
@@ -21,7 +21,7 @@ class CutreronteDomoticz:
 
     def _api_domoticz(self, encenderapagar):
         accion = "On" if encenderapagar else "Off"
-        ruta = self.domoticz_ruta.format(self.idx, accion)
+        ruta = self.domoticz_api.format(self.idx, accion)
         url = 'http://{}:{}{}'.format(self.host, self.port, ruta)
         try:
             f = urllib.request.urlopen(url)
@@ -35,7 +35,7 @@ class CutreronteDomoticz:
 
 if __name__ == '__main__':
     """ Probar la Api """
-    dz = CutreronteDomoticz()
+    dz = CutreronteDomoticz("192.168.1.10", 8080, 1)
     dz.activar()
     print("Encendido")
     sleep(3)

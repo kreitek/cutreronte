@@ -10,11 +10,8 @@
 Sustituto temporal de caronte server
 
 # INSTALACION
+renombrar ```ejemplo_config.ini``` por ```config.ini``` y rellenar
+
 
 # POR HACER
 
-utilizar variables de entorno, ej:
-``` python
-from os import getenv
-loquesea = getenv('CLAVE_QUE DEBERIA_EXISTIR', valor_por_defecto_si_no_existe)
-```
