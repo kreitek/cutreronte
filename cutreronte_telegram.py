@@ -1,5 +1,7 @@
 import urllib.request
+import logging
 
+logger = logging.getLogger(__name__)
 
 class CutreronteTelegram:
     def __init__(self, token):
@@ -10,9 +12,9 @@ class CutreronteTelegram:
     def enviar_mensaje(self, texto, chatid):
         try:
             urllib.request.urlopen(self.api_telegram.format(self.token, chatid, texto))
-            print("Enviado por telegram: '{}'".format(texto))
+            logging.info("Enviado por telegram: '{}'".format(texto))
         except urllib.error.HTTPError:
-            print("ha habido un error HTTPError")
+            logging.error("ha habido un error HTTPError")
 
 
 if __name__ == '__main__':

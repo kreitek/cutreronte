@@ -10,6 +10,7 @@ from cutreronte_seguimiento_usuarios import SeguimientoUsuarios
 from configparser import ConfigParser
 from cutreronte_telegram import CutreronteTelegram
 from cutreronte_domoticz import CutreronteDomoticz
+from logging.config import dictConfig
 
 
 config = ConfigParser()
@@ -18,6 +19,7 @@ config.read("config.ini")
 app_user = config.get('APP', 'user', fallback='admin')
 app_password = config.get('APP', 'password', fallback='admin')
 app_secretkey = config.get('APP', 'secretkey', fallback='5791628bb0b13ce0c676dfde280ba245')
+app_debug_level = config.get('APP', 'debug_level', fallback='INFO')
 
 telegram_log_group = config.get('TELEGRAM', 'log_group', fallback='-111111')
 telegram_general_group = config.get('TELEGRAM', 'general_group', fallback='-111111')
@@ -27,6 +29,29 @@ domoticz_host = config.get('DOMOTICZ', 'host', fallback='192.168.1.10')
 domoticz_port = config.get('DOMOTICZ', 'port', fallback='8080')
 domoticz_idx = config.get('DOMOTICZ', 'idx', fallback='1')
 
+
+dictConfig({
+    'version': 1,
+    'formatters': {'default': {
+        'format': '[%(asctime)s] %(levelname)s in %(module)s: %(message)s',
+    }},
+    'handlers': {
+        'console': {
+            'class': 'logging.StreamHandler',
+            'formatter': 'default',
+            'stream': "ext://sys.stdout"},
+        'file': {
+            'class': 'logging.handlers.RotatingFileHandler',
+            'formatter': 'default',
+            'filename': "cutreronte.log",
+            'maxBytes': 1024,
+            'backupCount': 3}
+    },
+    'root': {
+        'level': app_debug_level,
+        'handlers': ['console', 'file']
+    }
+})
 
 app = Flask(__name__, static_url_path="/static")
 api = Api(app)
@@ -120,7 +145,6 @@ class api1(Resource):
     def get(self, rfid):
         u = Usuarios.query.filter_by(rfid=rfid).first()
         if u:  # el usuario ya existe
-            print('username', u.username)
             actualiza_visto_por_ultima_vez(u)
             if u.autorizado:
                 su.alguien_entro_o_salio(u)  # uso rfid porque el nombre a veces es None

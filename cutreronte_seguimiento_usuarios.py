@@ -1,4 +1,7 @@
 from time import sleep
+import logging
+
+logger = logging.getLogger(__name__)
 
 
 class SeguimientoUsuarios():
@@ -30,13 +33,13 @@ class SeguimientoUsuarios():
 
     def _comprobar_lleno_o_vacio(self):
         if not self._usuarios_dentro and self.abierto_cerrado:
-            print("Hangar 2 Cerrado")
+            logging.info("Hangar 2 Cerrado")
             self.tg.enviar_mensaje("Hangar 2 Cerrado", self.telegram_general_group)
             self.dz.desactivar()
             self.abierto_cerrado = False
 
         elif self._usuarios_dentro and not self.abierto_cerrado:
-            print("Hangar 2 Abierto")
+            logging.info("Hangar 2 Abierto")
             self.tg.enviar_mensaje("Hangar 2 Abierto", self.telegram_general_group)
             self.dz.activar()
             self.abierto_cerrado = True

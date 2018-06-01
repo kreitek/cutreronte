@@ -1,7 +1,9 @@
 import urllib.request
 import urllib.parse
 from time import sleep
+import logging
 
+logger = logging.getLogger(__name__)
 
 class CutreronteDomoticz:
 
@@ -30,7 +32,7 @@ class CutreronteDomoticz:
         except urllib.error.HTTPError as e:
             status_code = e
         if status_code != 200:
-            print("error, no se pudo hacer la peticion a domoticz. Status code: {}".format(status_code))
+            logging.error("error, no se pudo hacer la peticion a domoticz. Status code: {}".format(status_code))
 
 
 if __name__ == '__main__':

@@ -2,3 +2,5 @@ __pycache__
 .idea
 cutreronte.db
 /config.ini
+/cutreronte.log
+/cutreronte.log.*
