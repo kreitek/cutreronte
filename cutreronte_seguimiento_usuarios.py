@@ -4,18 +4,17 @@ import logging
 logger = logging.getLogger(__name__)
 
 
-class SeguimientoUsuarios():
+class SeguimientoUsuarios:
     """ Lleva un control de los usuarios que entran y salen, da la señal de abierto y cerrado en domoticz
     y publica abierto cerrado en telegram """
 
-    def __init__(self, telegraminstance, domoticzinstance, telegram_log_group, telegram_general_group ):
+    def __init__(self, telegraminstance, domoticzinstance, telegram_log_group, telegram_general_group):
         self._usuarios_dentro = set()
         self.abierto_cerrado = False
         self.dz = domoticzinstance
         self.tg = telegraminstance
         self.telegram_log_group = telegram_log_group
         self.telegram_general_group = telegram_general_group
-
 
     @property
     def usuarios_dentro(self):

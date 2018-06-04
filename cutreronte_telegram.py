@@ -3,11 +3,11 @@ import logging
 
 logger = logging.getLogger(__name__)
 
+
 class CutreronteTelegram:
     def __init__(self, token):
         self.token = token
         self.api_telegram = "https://api.telegram.org/bot{}/sendMessage?chat_id={}&text={}"
-
 
     def enviar_mensaje(self, texto, chatid):
         try:

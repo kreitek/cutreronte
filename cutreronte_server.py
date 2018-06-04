@@ -96,16 +96,17 @@ def home():
         respuesta += "<P>Numero de usuarios dento: {}</P>".format(len(su.usuarios_dentro))
     return respuesta
 
+
 @app.route('/usuarios')
 @auth.login_required
-def ListarUsuarios():
+def listar_usuarios():
     lista = Usuarios.query.order_by(Usuarios.t_visto.desc()).all()
     lista_formateada = []
     for elemento in lista:
         el = {
             'id': elemento.id,
             'username': elemento.username if elemento.username else "NUEVO USUARIO!",
-            'rfid' : elemento.rfid,
+            'rfid': elemento.rfid,
             'autorizado': elemento.autorizado,
             'autorizado_texto': "Autorizado" if elemento.autorizado else "Sin autorizar",
             't_creacion': elemento.t_creacion.strftime("%d-%m-%Y"),
@@ -120,10 +121,11 @@ class FormUsuario(FlaskForm):
     autorizado = BooleanField('Autorizar')
     submit = SubmitField('Modificar')
 
-@app.route("/modificarusuario/<int:id>", methods=['GET', 'POST'])
+
+@app.route("/modificarusuario/<int:id_usuario>", methods=['GET', 'POST'])
 @auth.login_required
-def modificar_usuario(id):
-    u = Usuarios.query.filter_by(id=id).first()
+def modificar_usuario(id_usuario):
+    u = Usuarios.query.filter_by(id=id_usuario).first()
     if not u:
         abort(404, message='usuario no encontrado')
     form = FormUsuario()
@@ -131,7 +133,7 @@ def modificar_usuario(id):
         u.username = form.username.data
         u.autorizado = form.autorizado.data
         db.session.commit()
-        return redirect(url_for('ListarUsuarios'))
+        return redirect(url_for('listar_usuarios'))
     elif request.method == 'GET':
         form.username.data = u.username
         form.autorizado.data = True # por defecto check activado
@@ -140,11 +142,11 @@ def modificar_usuario(id):
         abort(404, message='usuario no encontrado')
 
 
-class api1(Resource):
+class Api1(Resource):
     @auth.login_required
     def get(self, rfid):
         u = Usuarios.query.filter_by(rfid=rfid).first()
-        if u:  # el usuario ya existe
+        if u is not None:  # el usuario ya existe
             actualiza_visto_por_ultima_vez(u)
             if u.autorizado:
                 su.alguien_entro_o_salio(u)  # uso rfid porque el nombre a veces es None
@@ -158,7 +160,7 @@ class api1(Resource):
             db.session.commit()
             abort(404, message='usuario no encontrado')
 
-api.add_resource(api1, '/api/1/<rfid>')
+api.add_resource(Api1, '/api/1/<rfid>')
 
 
 if __name__ == '__main__':
