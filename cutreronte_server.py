@@ -10,7 +10,9 @@ from cutreronte_seguimiento_usuarios import SeguimientoUsuarios
 from configparser import ConfigParser
 from cutreronte_telegram import CutreronteTelegram
 from cutreronte_domoticz import CutreronteDomoticz
-from logging.config import dictConfig
+import logging
+from logging.handlers import TimedRotatingFileHandler
+import os
 
 
 config = ConfigParser()
@@ -29,29 +31,25 @@ domoticz_host = config.get('DOMOTICZ', 'host', fallback='192.168.1.10')
 domoticz_port = config.get('DOMOTICZ', 'port', fallback='8080')
 domoticz_idx = config.get('DOMOTICZ', 'idx', fallback='1')
 
+# si no existe directorio 'logs' lo crea
+try:
+    os.stat('logs')
+except:
+    os.mkdir('logs')
 
-dictConfig({
-    'version': 1,
-    'formatters': {'default': {
-        'format': '[%(asctime)s] %(levelname)s in %(module)s: %(message)s',
-    }},
-    'handlers': {
-        'console': {
-            'class': 'logging.StreamHandler',
-            'formatter': 'default',
-            'stream': "ext://sys.stdout"},
-        'file': {
-            'class': 'logging.handlers.RotatingFileHandler',
-            'formatter': 'default',
-            'filename': "cutreronte.log",
-            'maxBytes': 1024,
-            'backupCount': 3}
-    },
-    'root': {
-        'level': app_debug_level,
-        'handlers': ['console', 'file']
-    }
-})
+logFormatter = logging.Formatter("%(asctime)s [%(levelname)-7.7s] %(message)s", "%H:%M:%S")
+logger = logging.getLogger()
+consoleHandler = logging.StreamHandler()
+consoleHandler.setFormatter(logFormatter)
+logger.addHandler(consoleHandler)
+# logfilename = datetime.today().strftime("%Y%m%d%S")
+# fileHandler = logging.FileHandler("logs/{}.log".format(logfilename))
+fileHandler = TimedRotatingFileHandler("logs/cutreronte.log",  when='midnight')
+fileHandler.suffix = "%Y%m%d.log"
+fileHandler.setFormatter(logFormatter)
+logger.addHandler(fileHandler)
+logger.setLevel(app_debug_level)
+
 
 app = Flask(__name__, static_url_path="/static")
 api = Api(app)
@@ -136,7 +134,7 @@ def modificar_usuario(id_usuario):
         return redirect(url_for('listar_usuarios'))
     elif request.method == 'GET':
         form.username.data = u.username
-        form.autorizado.data = True # por defecto check activado
+        form.autorizado.data = True  # por defecto check activado
         return render_template('editar_usuario.html', form=form, user=u)
     else:
         abort(404, message='usuario no encontrado')
