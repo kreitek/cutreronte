@@ -10,21 +10,25 @@ class CutreronteDomoticz:
 
     domoticz_api = "/json.htm?type=command&param=switchlight&idx={}&switchcmd={}"
 
-    def __init__(self, host, port, idx):
+    def __init__(self, host, port, idx_open, idx_pestillera):
         self.host = host
         self.port = port
-        self.idx = idx
+        self.idx_open = idx_open
+        self.idx_pestillera = idx_pestillera
         # TODO con usuario y contraseña
 
     def activar(self):
-        self._api_domoticz(True)
+        self._api_domoticz(self.idx_open, True)
 
     def desactivar(self):
-        self._api_domoticz(False)
+        self._api_domoticz(self.idx_open, False)
 
-    def _api_domoticz(self, encenderapagar):
+    def pestillera(self):
+        self._api_domoticz(self.idx_pestillera, True)
+
+    def _api_domoticz(self, idx, encenderapagar):
         accion = "On" if encenderapagar else "Off"
-        ruta = self.domoticz_api.format(self.idx, accion)
+        ruta = self.domoticz_api.format(idx, accion)
         url = 'http://{}:{}{}'.format(self.host, self.port, ruta)
         try:
             f = urllib.request.urlopen(url)

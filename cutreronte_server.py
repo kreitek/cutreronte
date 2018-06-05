@@ -29,7 +29,9 @@ telegram_token = config.get('TELEGRAM', 'token', fallback='111111')
 
 domoticz_host = config.get('DOMOTICZ', 'host', fallback='192.168.1.10')
 domoticz_port = config.get('DOMOTICZ', 'port', fallback='8080')
-domoticz_idx = config.get('DOMOTICZ', 'idx', fallback='1')
+domoticz_idx_open = config.get('DOMOTICZ', 'idx_open', fallback='1')
+domoticz_idx_pestillera = config.get('DOMOTICZ', 'idx_pestillera', fallback='2')
+
 
 # si no existe directorio 'logs' lo crea
 try:
@@ -60,7 +62,7 @@ db = SQLAlchemy(app)
 auth = HTTPBasicAuth()
 
 tg = CutreronteTelegram(telegram_token)
-dz = CutreronteDomoticz(domoticz_host, domoticz_port, domoticz_idx)
+dz = CutreronteDomoticz(domoticz_host, domoticz_port, domoticz_idx_open, domoticz_idx_pestillera)
 
 su = SeguimientoUsuarios(tg, dz, telegram_log_group, telegram_general_group)
 

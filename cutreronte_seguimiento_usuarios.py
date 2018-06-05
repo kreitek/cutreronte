@@ -24,10 +24,11 @@ class SeguimientoUsuarios:
         if usuario.rfid in self._usuarios_dentro:
             self._usuarios_dentro.remove(usuario.rfid)
             self.tg.enviar_mensaje("{} acaba de salir".format(usuario.username), self.telegram_log_group)
+            self.dz.pestillera()
         else:
             self._usuarios_dentro.add(usuario.rfid)
             self.tg.enviar_mensaje("{} acaba de entrar".format(usuario.username), self.telegram_log_group)
-
+            self.dz.pestillera()
         self._comprobar_lleno_o_vacio()
 
     def _comprobar_lleno_o_vacio(self):
