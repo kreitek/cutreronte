@@ -11,10 +11,13 @@ class CutreronteTelegram:
 
     def enviar_mensaje(self, texto, chatid):
         try:
-            urllib.request.urlopen(self.api_telegram.format(self.token, chatid, texto))
+            urllib.request.urlopen(self.api_telegram.format(self.token, chatid, texto), timeout=2)
             logging.info("Enviado por telegram: '{}'".format(texto))
-        except urllib.error.HTTPError:
-            logging.error("ha habido un error HTTPError")
+        except UnicodeEncodeError:
+            # 'ascii' codec can't encode character '\xf3' in position 112: ordinal not in range(128)
+            self.enviar_mensaje(texto.encode('ascii', errors='replace').decode('ascii'), chatid)
+        except Exception as e:
+            logging.error(e)
 
 
 if __name__ == '__main__':

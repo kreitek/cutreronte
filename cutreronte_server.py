@@ -56,6 +56,7 @@ logger.setLevel(app_debug_level)
 app = Flask(__name__, static_url_path="/static")
 api = Api(app)
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///cutreronte.db'
+app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = True  # adds significant overhead, desactivar cuando la app este madura
 app.config['SECRET_KEY'] = app_secretkey
 
 db = SQLAlchemy(app)
@@ -147,11 +148,12 @@ class Api1(Resource):
     def get(self, rfid):
         u = Usuarios.query.filter_by(rfid=rfid).first()
         if u is not None:  # el usuario ya existe
-            actualiza_visto_por_ultima_vez(u)
             if u.autorizado:
                 su.alguien_entro_o_salio(u)  # uso rfid porque el nombre a veces es None
+                actualiza_visto_por_ultima_vez(u) # no modificar antes de comprobar si entro o salio
                 return {'status': 'ok', 'username': u.username}
             else:
+                actualiza_visto_por_ultima_vez(u)
                 abort(401, message='no autorizado')
         else:  # un nuevo usuario
             nueva_tarjeta = Usuarios(username=None, rfid=rfid, autorizado=False,

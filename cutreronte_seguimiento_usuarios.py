@@ -1,4 +1,5 @@
 from time import sleep
+from datetime import datetime
 import logging
 
 logger = logging.getLogger(__name__)
@@ -21,17 +22,23 @@ class SeguimientoUsuarios:
         return tuple(self._usuarios_dentro)
 
     def alguien_entro_o_salio(self, usuario):
+        # comprobamos que no ha vuelto a pasar la tarjeta imnediatamente
+        if (datetime.now() - usuario.t_visto).seconds < 90:  # minuto y medio
+            return
+        # si estaba dentro lo saca, si no lo mete
         if usuario.rfid in self._usuarios_dentro:
             self._usuarios_dentro.remove(usuario.rfid)
-            self.tg.enviar_mensaje("{} acaba de salir".format(usuario.username), self.telegram_log_group)
+            self.tg.enviar_mensaje("{} ha salido".format(usuario.username), self.telegram_log_group)
             self.dz.pestillera()
         else:
             self._usuarios_dentro.add(usuario.rfid)
             self.tg.enviar_mensaje("{} acaba de entrar".format(usuario.username), self.telegram_log_group)
             self.dz.pestillera()
+        # comprueba si es el primero o el ultimo, para abrir o cerrar
         self._comprobar_lleno_o_vacio()
 
     def _comprobar_lleno_o_vacio(self):
+        """ comprueba si es el primero o el ultimo, para abrir o cerrar """
         if not self._usuarios_dentro and self.abierto_cerrado:
             logging.info("Hangar 2 Cerrado")
             self.tg.enviar_mensaje("Hangar 2 Cerrado", self.telegram_general_group)

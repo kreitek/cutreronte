@@ -31,10 +31,10 @@ class CutreronteDomoticz:
         ruta = self.domoticz_api.format(idx, accion)
         url = 'http://{}:{}{}'.format(self.host, self.port, ruta)
         try:
-            f = urllib.request.urlopen(url)
+            f = urllib.request.urlopen(url, data=None, timeout=2) # TODO credenciales irian aqui
             # print(f.read().decode('utf-8'))
             status_code = f.getcode()
-        except urllib.error.HTTPError as e:
+        except Exception as e:
             status_code = e
         if status_code != 200:
             logging.error("error, no se pudo hacer la peticion a domoticz. Status code: {}".format(status_code))
