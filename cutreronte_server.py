@@ -109,7 +109,6 @@ def listar_usuarios():
             'username': elemento.username if elemento.username else "NUEVO USUARIO!",
             'rfid': elemento.rfid,
             'autorizado': elemento.autorizado,
-            'autorizado_texto': "Autorizado" if elemento.autorizado else "Sin autorizar",
             't_creacion': elemento.t_creacion.strftime("%d-%m-%Y"),
             't_visto': elemento.t_visto.strftime("%d-%m-%Y %H:%M:%S")
         }
@@ -151,7 +150,11 @@ class Api1(Resource):
             if u.autorizado:
                 su.alguien_entro_o_salio(u)  # uso rfid porque el nombre a veces es None
                 actualiza_visto_por_ultima_vez(u) # no modificar antes de comprobar si entro o salio
-                return {'status': 'ok', 'username': u.username}
+                # devuelve json si la peticion viene de fuera, o devuelve a listado usuarios si es interna
+                if(request.remote_addr == '127.0.0.1'):
+                    return redirect(url_for('listar_usuarios'))
+                else:
+                    return {'status': 'ok', 'username': u.username}
             else:
                 actualiza_visto_por_ultima_vez(u)
                 abort(401, message='no autorizado')

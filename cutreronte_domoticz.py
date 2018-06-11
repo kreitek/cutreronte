@@ -37,7 +37,7 @@ class CutreronteDomoticz:
         except Exception as e:
             status_code = e
         if status_code != 200:
-            logging.error("error, no se pudo hacer la peticion a domoticz. Status code: {}".format(status_code))
+            logging.error("DOMOTICZ no se pudo hacer la peticion a domoticz. Status code: {}".format(status_code))
 
 
 if __name__ == '__main__':
