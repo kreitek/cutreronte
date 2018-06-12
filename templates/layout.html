@@ -12,9 +12,45 @@
     <title>Cutreronte</title>
 </head>
 <body>
-    <H1 class="site-header">Cutreronte</H1>
+    <header class="site-header">
+      <nav class="navbar navbar-expand-md navbar-dark bg-steel fixed-top">
+        <div class="container">
+          <a class="navbar-brand mr-4" href="/">Cutreronte</a>
+          <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarToggle" aria-controls="navbarToggle" aria-expanded="false" aria-label="Toggle navigation">
+            <span class="navbar-toggler-icon"></span>
+          </button>
+          <div class="collapse navbar-collapse" id="navbarToggle">
+            <div class="navbar-nav mr-auto">
+              <a class="nav-item nav-link" href="{{ url_for('listar_usuarios') }}">Usuarios</a>
+            </div>
+            <!-- Navbar Right Side -->
+            <div class="navbar-nav">
 
-    {% block content %}{% endblock %}
+                <a class="nav-item nav-link" href="http://wiki.kreitek.org/proyectos:domotica_con_sonoff_y_raspberry_pi" target="_blank">Wiki</a>
+                <a class="nav-item nav-link" href="https://github.com/kreitek/cutreronte" target="_blank">GitHub</a>
+            </div>
+          </div>
+        </div>
+      </nav>
+    </header>
+    <main role="main" class="container">
+      <div class="row">
+          <div class="col-md-2"></div><!--vacios 2 izda y 2 dcha-->
+
+        <div class="col-md-8 col-centered">
+          {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+              {% for category, message in messages %}
+                <div class="alert alert-{{ category }}">
+                  {{ message }}
+                </div>
+              {% endfor %}
+            {% endif %}
+          {% endwith %}
+          {% block content %}{% endblock %}
+        </div>
+      </div>
+    </main>
 
     <!-- Optional JavaScript -->
     <!-- jQuery first, then Popper.js, then Bootstrap JS -->

@@ -1,9 +1,9 @@
-from flask import Flask, render_template, redirect, url_for, request
+from flask import Flask, render_template, redirect, url_for, request, flash
 from flask_restful import Resource, Api, abort
 from flask_sqlalchemy import SQLAlchemy
 from flask_httpauth import HTTPBasicAuth
 from flask_wtf import FlaskForm
-from wtforms import StringField, SubmitField, TextAreaField, BooleanField
+from wtforms import StringField, SubmitField, BooleanField
 from wtforms.validators import DataRequired
 from datetime import datetime
 from cutreronte_seguimiento_usuarios import SeguimientoUsuarios
@@ -90,12 +90,8 @@ class Usuarios(db.Model):
 
 @app.route('/')
 def home():
-    respuesta = "<H1>Cutreronte</H1>"
     abiertocerradotexto = "ABIERTO" if su.abierto_cerrado else "CERRADO"
-    respuesta += "<P>Espacio {}</P>".format(abiertocerradotexto)
-    if su.abierto_cerrado:
-        respuesta += "<P>Numero de usuarios dento: {}</P>".format(len(su.usuarios_dentro))
-    return respuesta
+    return render_template('home.html', estado=abiertocerradotexto, nusuarios=len(su.usuarios_dentro))
 
 
 @app.route('/usuarios')
@@ -133,6 +129,7 @@ def modificar_usuario(id_usuario):
         u.username = form.username.data
         u.autorizado = form.autorizado.data
         db.session.commit()
+        flash('Usuario {} actualizado'.format(u.username), 'success')
         return redirect(url_for('listar_usuarios'))
     elif request.method == 'GET':
         form.username.data = u.username
@@ -149,9 +146,10 @@ class Api1(Resource):
         if u is not None:  # el usuario ya existe
             if u.autorizado:
                 su.alguien_entro_o_salio(u)  # uso rfid porque el nombre a veces es None
-                actualiza_visto_por_ultima_vez(u) # no modificar antes de comprobar si entro o salio
+                actualiza_visto_por_ultima_vez(u)  # no modificar antes de comprobar si entro o salio
                 # devuelve json si la peticion viene de fuera, o devuelve a listado usuarios si es interna
-                if(request.remote_addr == '127.0.0.1'):
+                if request.remote_addr == '127.0.0.1':
+                    flash('Emulada tarjeta {}'.format(u.rfid), 'success')
                     return redirect(url_for('listar_usuarios'))
                 else:
                     return {'status': 'ok', 'username': u.username}
