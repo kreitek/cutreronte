@@ -2,4 +2,11 @@
 {% block content %}
 <h3>Estado del sitio: {{ estado }}</h3>
 Numero de usuarios: {{ nusuarios }}
+{% if lusuarios %}
+    <ul>
+      {% for nombre in lusuarios %}
+        <li>{{ nombre }}</li>
+      {% endfor %}
+    </ul>
+{% endif %}
 {% endblock content %}

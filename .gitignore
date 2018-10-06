@@ -5,3 +5,5 @@ cutreronte.db
 /cutreronte.log
 /cutreronte.log.*
 logs
+venv
+temp_*

@@ -6,7 +6,7 @@ from flask_wtf import FlaskForm
 from wtforms import StringField, SubmitField, BooleanField
 from wtforms.validators import DataRequired
 from datetime import datetime
-from cutreronte_seguimiento_usuarios import SeguimientoUsuarios
+from cutreronte_seguimiento_usuarios import SeguimientoUsuarios, EstadoSitio
 from configparser import ConfigParser
 from cutreronte_telegram import CutreronteTelegram
 from cutreronte_domoticz import CutreronteDomoticz
@@ -25,13 +25,13 @@ app_debug_level = config.get('APP', 'debug_level', fallback='INFO')
 
 telegram_log_group = config.get('TELEGRAM', 'log_group', fallback='-111111')
 telegram_general_group = config.get('TELEGRAM', 'general_group', fallback='-111111')
+telegram_security_group = config.get('TELEGRAM', 'security_group', fallback='-111111')
 telegram_token = config.get('TELEGRAM', 'token', fallback='111111')
 
 domoticz_host = config.get('DOMOTICZ', 'host', fallback='192.168.1.10')
 domoticz_port = config.get('DOMOTICZ', 'port', fallback='8080')
 domoticz_idx_open = config.get('DOMOTICZ', 'idx_open', fallback='1')
 domoticz_idx_pestillera = config.get('DOMOTICZ', 'idx_pestillera', fallback='2')
-
 
 # si no existe directorio 'logs' lo crea
 try:
@@ -62,10 +62,10 @@ app.config['SECRET_KEY'] = app_secretkey
 db = SQLAlchemy(app)
 auth = HTTPBasicAuth()
 
-tg = CutreronteTelegram(telegram_token)
+estado_sitio = EstadoSitio()
 dz = CutreronteDomoticz(domoticz_host, domoticz_port, domoticz_idx_open, domoticz_idx_pestillera)
-
-su = SeguimientoUsuarios(tg, dz, telegram_log_group, telegram_general_group)
+tg = CutreronteTelegram(telegram_token, telegram_log_group, telegram_general_group, telegram_security_group, estado_sitio, dz)
+su = SeguimientoUsuarios(tg, dz, estado_sitio)
 
 
 def actualiza_visto_por_ultima_vez(u):
@@ -90,8 +90,9 @@ class Usuarios(db.Model):
 
 @app.route('/')
 def home():
-    abiertocerradotexto = "ABIERTO" if su.abierto_cerrado else "CERRADO"
-    return render_template('home.html', estado=abiertocerradotexto, nusuarios=len(su.usuarios_dentro))
+    return render_template('home.html', estado=estado_sitio.texto_abierto_cerrado,
+                           nusuarios=estado_sitio.numero_usuarios,
+                           lusuarios=estado_sitio.listado_usuarios)
 
 
 @app.route('/usuarios')
@@ -145,7 +146,7 @@ class Api1(Resource):
         u = Usuarios.query.filter_by(rfid=rfid).first()
         if u is not None:  # el usuario ya existe
             if u.autorizado:
-                su.alguien_entro_o_salio(u)  # uso rfid porque el nombre a veces es None
+                su.alguien_entro_o_salio(u)
                 actualiza_visto_por_ultima_vez(u)  # no modificar antes de comprobar si entro o salio
                 # devuelve json si la peticion viene de fuera, o devuelve a listado usuarios si es interna
                 if request.remote_addr == '127.0.0.1':
@@ -162,6 +163,7 @@ class Api1(Resource):
             db.session.add(nueva_tarjeta)
             db.session.commit()
             abort(404, message='usuario no encontrado')
+
 
 api.add_resource(Api1, '/api/1/<rfid>')
 

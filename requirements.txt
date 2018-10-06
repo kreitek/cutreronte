@@ -3,3 +3,4 @@ flask_restful
 flask_sqlalchemy
 Flask-HTTPAuth
 flask_wtf
+python-telegram-bot>=7.0.1
