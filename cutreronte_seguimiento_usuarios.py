@@ -7,12 +7,12 @@ logger = logging.getLogger(__name__)
 class EstadoSitio:
     """ Lleva un control de los usuarios que entran y salen """
     def __init__(self):
-        self.usuarios_dentro = set()  # objetos de la clase Usuario
-        self.abierto_cerrado = False # necesario para comprobar si se abre por primera vez o se cierra al salir el ultimo
+        self._usuarios_dentro = set()  # objetos de la clase Usuario
+        self.abierto_cerrado = False  # necesario para _comprobar_lleno_o_vacio
 
     @property
     def listado_usuarios(self):
-        return [usuario.username for usuario in self.usuarios_dentro]
+        return [usuario.username for usuario in self._usuarios_dentro]
 
     @property
     def listado_usuarios_string(self):
@@ -21,14 +21,29 @@ class EstadoSitio:
 
     @property
     def numero_usuarios(self):
-        return len(self.usuarios_dentro)
+        return len(self._usuarios_dentro)
 
     @property
     def texto_abierto_cerrado(self):
         return "ABIERTO" if self.abierto_cerrado else "CERRADO"
 
+    def esta_dentro(self, usuario):
+        for u in self._usuarios_dentro:
+            if u.rfid == usuario.rfid:
+                return True
+        return False
+
+    def sacar(self, usuario):
+        for u in self._usuarios_dentro:
+            if u.rfid == usuario.rfid:
+                self._usuarios_dentro.remove(u)
+                break
+
+    def meter(self, usuario):
+        self._usuarios_dentro.add(usuario)
+
     def vaciar_usuarios(self):
-        self.usuarios_dentro.clear()
+        self._usuarios_dentro.clear()
         # NO pasar abierto_cerrado a False aqui
 
 
@@ -41,15 +56,15 @@ class SeguimientoUsuarios:
 
     def alguien_entro_o_salio(self, usuario):
         # comprobamos que no ha vuelto a pasar la tarjeta imnediatamente
-        if (datetime.now() - usuario.t_visto).seconds < 90:  # minuto y medio
+        if (datetime.now() - usuario.t_visto).seconds < 9:  # minuto y medio
             return
         # si estaba dentro lo saca, si no lo mete
-        if usuario in self.estado_sitio.usuarios_dentro:
-            self.estado_sitio.usuarios_dentro.remove(usuario)
+        if self.estado_sitio.esta_dentro(usuario):
+            self.estado_sitio.sacar(usuario)
             self.tg.enviar_usuario_salio(usuario.username)
             self.dz.pestillera()
         else:
-            self.estado_sitio.usuarios_dentro.add(usuario)
+            self.estado_sitio.meter(usuario)
             self.tg.enviar_usuario_entro(usuario.username)
             self.dz.pestillera()
         # comprueba si es el primero o el ultimo, para abrir o cerrar
@@ -57,12 +72,12 @@ class SeguimientoUsuarios:
 
     def _comprobar_lleno_o_vacio(self):
         """ comprueba si es el primero o el ultimo, para abrir o cerrar """
-        if not self.estado_sitio.usuarios_dentro and self.estado_sitio.abierto_cerrado:
+        if self.estado_sitio.numero_usuarios < 1 and self.estado_sitio.abierto_cerrado:
             logging.info("Hangar 2 Cerrado")
             self.dz.desactivar()
             self.estado_sitio.abierto_cerrado = False
             self.tg.enviar_estado_hangar()
-        elif self.estado_sitio.usuarios_dentro and not self.estado_sitio.abierto_cerrado:
+        elif self.estado_sitio.numero_usuarios > 0 and not self.estado_sitio.abierto_cerrado:
             logging.info("Hangar 2 Abierto")
             self.dz.activar()
             self.estado_sitio.abierto_cerrado = True
