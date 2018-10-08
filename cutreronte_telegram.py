@@ -46,7 +46,7 @@ class CutreronteTelegram:
         dp.add_handler(CommandHandler("users_in", self.users_in))
         dp.add_handler(CommandHandler("status", self.status))
         dp.add_handler(CommandHandler("cerrar", self.cerrar))
-        dp.add_handler(CommandHandler("open", self.abrir_puerta))
+        dp.add_handler(CommandHandler("abrir", self.abrir))
 
         # on noncommand i.e message - echo the message on Telegram
         # dp.add_handler(MessageHandler(Filters.text, self.echo))
@@ -79,6 +79,8 @@ class CutreronteTelegram:
         """Send a message ...."""
         if self.estado_sitio.numero_usuarios > 0:
             msg = "{} personas: {}".format(self.estado_sitio.numero_usuarios, self.estado_sitio.listado_usuarios_string)
+        elif self.estado_sitio.abierto_cerrado == True:
+            msg = "Usuario anonimo"
         else:
             msg = "Nadie dentro"
         update.message.reply_text(msg)
@@ -91,9 +93,10 @@ class CutreronteTelegram:
         """Send a message ...."""
         if not self.autorizacion_segura(update):
             return
-        if self.estado_sitio.numero_usuarios > 0:
-            msg = "Expulsados {}. Hangar 2 Cerrado".format(self.estado_sitio.listado_usuarios_string)
-            self.estado_sitio.vaciar_usuarios()
+        if self.estado_sitio.abierto_cerrado:
+            if self.estado_sitio.numero_usuarios > 0:
+                msg = "Expulsados {}. Hangar 2 Cerrado".format(self.estado_sitio.listado_usuarios_string)
+                self.estado_sitio.vaciar_usuarios()
             self.estado_sitio.abierto_cerrado = False
             self.domoticz.desactivar()
             self.enviar_estado_hangar()
@@ -102,22 +105,28 @@ class CutreronteTelegram:
             msg = "Ya esta cerrado"
         update.message.reply_text(msg)
 
-    def abrir_puerta(self, bot, update):
+    def abrir(self, bot, update):
         if not self.autorizacion_segura(update):
             return
-        # self.domoticz.pestillera()
-        # update.message.reply_text("Mandada señal a la pestillera")
-        update.message.reply_text("Por seguridad se ha deshabilitado esta funcion")
+        if not self.estado_sitio.abierto_cerrado:
+            msg = "Hangar 2 Abierto (anonimo)"
+            self.estado_sitio.abierto_cerrado = True
+            self.domoticz.activar()
+            self.enviar_estado_hangar()
+        else:
+            self.domoticz.desactivar()  # por seguridad
+            msg = "Ya esta abierto"
+        update.message.reply_text(msg)
 
-    @staticmethod
-    def start(bot, update):
+    def start(self, bot, update):
         """Send a message when the command /start is issued."""
         update.message.reply_text('Hola!')
+        self.help(bot, update)
 
     @staticmethod
     def help(bot, update):
         """Send a message when the command /help is issued."""
-        update.message.reply_text('La ayuda aun no esta implementeada')  # TODO
+        update.message.reply_text('Los comandos disponibles son: /status /users_in /abrir /cerrar')
 
     @staticmethod
     def echo(bot, update):
