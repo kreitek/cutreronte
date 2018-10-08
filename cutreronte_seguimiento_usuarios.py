@@ -56,7 +56,7 @@ class SeguimientoUsuarios:
 
     def alguien_entro_o_salio(self, usuario):
         # comprobamos que no ha vuelto a pasar la tarjeta imnediatamente
-        if (datetime.now() - usuario.t_visto).seconds < 9:  # minuto y medio
+        if (datetime.now() - usuario.t_visto).seconds < 60:  # un minuto (antirrebotes)
             return
         # si estaba dentro lo saca, si no lo mete
         if self.estado_sitio.esta_dentro(usuario):
