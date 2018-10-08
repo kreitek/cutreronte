@@ -91,7 +91,7 @@ class CutreronteTelegram:
 
     def cerrar(self, bot, update):
         """Send a message ...."""
-        if not self.autorizacion_segura(update):
+        if not self.autorizacion_segura(update, "cerrar"):
             return
         if self.estado_sitio.abierto_cerrado:
             if self.estado_sitio.numero_usuarios > 0:
@@ -106,7 +106,7 @@ class CutreronteTelegram:
         update.message.reply_text(msg)
 
     def abrir(self, bot, update):
-        if not self.autorizacion_segura(update):
+        if not self.autorizacion_segura(update, "abrir"):
             return
         if not self.estado_sitio.abierto_cerrado:
             msg = "Hangar 2 Abierto (anonimo)"
@@ -138,10 +138,11 @@ class CutreronteTelegram:
         """Log Errors caused by Updates."""
         logger.warning('Update "%s" caused error "%s"', update, error)
 
-    def autorizacion_segura(self, update):
+    def autorizacion_segura(self, update, comando):
         """ Devuelve True si la peticion es de el grupo seguro """
         if update.message.chat.id != self.security_group_id:
             update.message.reply_text("no esta autorizado para usar esta funcion")
+            logging.info("Intentado comando '{}' desde id '{}'. Operacion no permitida".format(comando, update.message.chat.id))
             return False
         else:
             return True
