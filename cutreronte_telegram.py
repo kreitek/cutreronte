@@ -46,6 +46,7 @@ class CutreronteTelegram:
         dp.add_handler(CommandHandler("users_in", self.users_in))
         dp.add_handler(CommandHandler("status", self.status))
         dp.add_handler(CommandHandler("cerrar", self.cerrar))
+        dp.add_handler(CommandHandler("ATPC", self.atpc))
         dp.add_handler(CommandHandler("abrir", self.abrir))
 
         # on noncommand i.e message - echo the message on Telegram
@@ -90,12 +91,17 @@ class CutreronteTelegram:
         update.message.reply_text("Hangar 2 {}".format(self.estado_sitio.texto_abierto_cerrado.lower()))
 
     def cerrar(self, bot, update):
-        """Send a message ...."""
+        """ DEPRECATED """
+        update.message.reply_text("Comando no encontrado. ¿Quizas quiso decir /ATPC ?")
+
+    def atpc(self, bot, update):
+        """Echa a todos (solo desde grupo administrador)"""
         if not self.autorizacion_segura(update, "cerrar"):
             return
+        msg = ""  # se sobreescribirá
         if self.estado_sitio.abierto_cerrado:
             if self.estado_sitio.numero_usuarios > 0:
-                msg = "Expulsados {}. Hangar 2 Cerrado".format(self.estado_sitio.listado_usuarios_string)
+                msg = "echo '{}' > ATPC".format(self.estado_sitio.listado_usuarios_string)
                 self.estado_sitio.vaciar_usuarios()
             self.estado_sitio.abierto_cerrado = False
             self.domoticz.desactivar()
